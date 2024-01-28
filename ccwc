@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+from collections import defaultdict
+from typing import Dict
+import click
+import sys
+
+
+def count_file_contents(file_path) -> Dict[str, int]:
+    """Count the number of lines, words, bytes and chars in a text file."""
+    numbytes = numwords = numchars = numlines = 0
+    data = list()
+    if file_path:
+        with open(file_path, "rb") as f:
+            data = f.read().splitlines(keepends=True)
+    else:
+        data = sys.stdin.buffer.read().splitlines(keepends=True)
+
+    for linebytes in data:
+        # may raise UnicodeDecodeError if not text
+        linestr = linebytes.decode("utf-8")
+        numwords += len(linestr.split())
+        numchars += len(linestr)
+        numbytes += len(linebytes)
+        numlines += 1
+    return {
+        "numlines": numlines,
+        "numwords": numwords,
+        "numchars": numchars,
+        "numbytes": numbytes,
+    }
+
+
+@click.command()
+@click.argument("file_path", nargs=-1, required=False, type=click.Path(exists=True))
+@click.option(
+    "--should-count-bytes",
+    "-c",
+    is_flag=True,
+    help="Count the number of bytes in a text file.",
+)
+@click.option(
+    "--should-count-lines",
+    "-l",
+    is_flag=True,
+    help="Count the number of lines in a text file.",
+)
+@click.option(
+    "--should-count-words",
+    "-w",
+    is_flag=True,
+    help="Count the number of words in a text file.",
+)
+@click.option(
+    "--should-count-chars",
+    "-m",
+    is_flag=True,
+    help="Count the number of characters in a text file.",
+)
+def ccwc(
+    file_path,
+    should_count_bytes,
+    should_count_lines,
+    should_count_words,
+    should_count_chars,
+) -> None:
+    """
+    A Python version of the wc utility, which displays the number
+    of lines, words, and bytes contained in each input text file,
+    or standard input (if no file is specified) to the standard
+    output. An Exception is raised if non-text files are provided.
+    """
+    filepaths = list(file_path)
+    allcounts = []
+
+    if not filepaths:
+        # getting fed from stdin
+        filepaths.append(None)
+
+    for fpath in filepaths:
+        # if no options provided, assume -wcl
+        if not any(
+            [
+                should_count_bytes,
+                should_count_lines,
+                should_count_words,
+                should_count_chars,
+            ]
+        ):
+            should_count_bytes = should_count_lines = should_count_words = True
+
+        counts = count_file_contents(fpath)
+        allcounts.append(counts)
+
+        if should_count_lines:
+            click.echo(f"{counts['numlines']:8}", nl=False)
+        if should_count_words:
+            click.echo(f"{counts['numwords']:8}", nl=False)
+        if should_count_bytes:
+            click.echo(f"{counts['numbytes']:8}", nl=False)
+        if should_count_chars:
+            click.echo(f"{counts['numchars']:8}", nl=False)
+
+        click.echo(f" {fpath or ''}")
+
+    if len(filepaths) > 1:
+        totals = defaultdict(int)
+        for counts in allcounts:
+            for key, val in counts.items():
+                totals[key] += val
+        if should_count_lines:
+            click.echo(f"{totals['numlines']:8}", nl=False)
+        if should_count_words:
+            click.echo(f"{totals['numwords']:8}", nl=False)
+        if should_count_bytes:
+            click.echo(f"{totals['numbytes']:8}", nl=False)
+        if should_count_chars:
+            click.echo(f"{totals['numchars']:8}", nl=False)
+        click.echo(" total")
+
+
+if __name__ == "__main__":
+    ccwc()
