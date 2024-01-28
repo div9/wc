@@ -87,9 +87,11 @@ class TestCCWC(unittest.TestCase):
         self.assertEqual(wc_output, ccwc_output)
 
     def testTwoOptions(self):
-        wc_output = run_command("wc -wl ./test.txt")
-        ccwc_output = run_command("./ccwc -wl ./test.txt")
-        self.assertEqual(wc_output, ccwc_output)
+        options = ["-wl", "-cl", "-wc"]
+        for option in options:
+            wc_output = run_command(f"wc {option} ./test.txt")
+            ccwc_output = run_command(f"./ccwc {option} ./test.txt")
+            self.assertEqual(wc_output, ccwc_output)
 
     def testMultipleFiles(self):
         wc_output = run_command("wc ./test.txt ./ccwc")
