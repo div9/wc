@@ -24,7 +24,7 @@ Options:
 
 `ccwc` requires Python, version 3.12
 
-It also requires the `click` library to be installed. Install it using `pip install click`.
+It also requires the `click` library to be installed. Install it using `pip install click`. Click provides a really nice API for designing command line arguments and options.
 
 ### Project Structure
 
